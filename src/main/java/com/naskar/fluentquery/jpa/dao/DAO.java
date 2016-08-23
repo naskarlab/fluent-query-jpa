@@ -13,10 +13,13 @@ public interface DAO {
 	<T> T delete(T o);
 
 	<T> List<T> list(Query<T> query);
+	
+	<T> List<T> list(Query<T> query, Integer first, Integer max);
 
 	<T> Query<T> query(Class<T> clazz);
 	
 	<T> T single(Query<T> query);
 
 	<T, R> List<R> list(Query<T> query, Class<R> clazzR);
+	
 }

@@ -57,9 +57,19 @@ public class DAOImpl implements DAO {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <T> List<T> list(Class<T> clazz, String sql, List<Object> params) {
+	private <T> List<T> list(Class<T> clazz, String sql, List<Object> params, 
+			Integer first, Integer max) {
 		javax.persistence.Query q = em.createNativeQuery(sql, clazz);
 		addParams(q, params);
+		
+		if(first != null) {
+			q.setFirstResult(first);
+		}
+		
+		if(max != null) {
+			q.setMaxResults(max);
+		}
+		
 		return q.getResultList();
 	}
 	
@@ -81,8 +91,13 @@ public class DAOImpl implements DAO {
 	
 	@Override
 	public <T> List<T> list(Query<T> query) {
+		return list(query, null, null);
+	}
+	
+	@Override
+	public <T> List<T> list(Query<T> query, Integer first, Integer max) {
 		NativeSQLResult result = query.to(nativeSQL);
-		return list(query.getClazz(), result.sqlValues(), result.values());
+		return list(query.getClazz(), result.sqlValues(), result.values(), first, max);
 	}
 	
 	private Map<String, Field> getFields(Class<?> clazz) {
