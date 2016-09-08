@@ -58,19 +58,28 @@ public class DAOImpl implements DAO {
 	
 	@SuppressWarnings("unchecked")
 	private <T> List<T> list(Class<T> clazz, String sql, List<Object> params, 
-			Integer first, Integer max) {
+			Long first, Long max) {
 		javax.persistence.Query q = em.createNativeQuery(sql, clazz);
 		addParams(q, params);
 		
+		Long count = -1L;
+		
 		if(first != null) {
-			q.setFirstResult(first);
+			q.setFirstResult(first.intValue());
+			count = getCount(sql, params);
 		}
 		
 		if(max != null) {
-			q.setMaxResults(max);
+			q.setMaxResults(max.intValue());
 		}
 		
-		return q.getResultList();
+		List<T> result = q.getResultList(); 
+		
+		if(first != null) {
+			result = new SubListImpl<T>(result, first, max, count);
+		}
+		
+		return result;
 	}
 	
 	private void addParams(PreparedStatement st, List<Object> params) throws SQLException {
@@ -89,13 +98,27 @@ public class DAOImpl implements DAO {
 		}
 	}
 	
+	private Long getCount(String sql, List<Object> params) {
+		String sqlCount = sql;
+		
+		int pos = sqlCount.indexOf("order by");
+		if(pos > -1) {
+			sqlCount = sqlCount.substring(0, pos);
+		}
+		
+		javax.persistence.Query q = em.createNativeQuery("SELECT COUNT(*) FROM (" + sqlCount + ")");
+		addParams(q, params);
+		
+		return ((Number)q.getSingleResult()).longValue();
+	}
+	
 	@Override
 	public <T> List<T> list(Query<T> query) {
 		return list(query, null, null);
 	}
 	
 	@Override
-	public <T> List<T> list(Query<T> query, Integer first, Integer max) {
+	public <T> List<T> list(Query<T> query, Long first, Long max) {
 		NativeSQLResult result = query.to(nativeSQL);
 		return list(query.getClazz(), result.sqlValues(), result.values(), first, max);
 	}

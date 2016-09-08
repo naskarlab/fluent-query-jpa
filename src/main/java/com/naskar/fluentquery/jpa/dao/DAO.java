@@ -14,7 +14,7 @@ public interface DAO {
 
 	<T> List<T> list(Query<T> query);
 	
-	<T> List<T> list(Query<T> query, Integer first, Integer max);
+	<T> List<T> list(Query<T> query, Long first, Long max);
 
 	<T> Query<T> query(Class<T> clazz);
 	
