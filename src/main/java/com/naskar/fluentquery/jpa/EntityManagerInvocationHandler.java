@@ -1,6 +1,7 @@
 package com.naskar.fluentquery.jpa;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
 
@@ -53,7 +54,12 @@ public class EntityManagerInvocationHandler implements InvocationHandler {
 					}
 				}
 			}
-			throw e;
+			
+			if(e instanceof InvocationTargetException) {
+				throw ((InvocationTargetException)e).getTargetException();
+			} else {
+				throw e;
+			}
 			
 		} finally {
 			if(created) {

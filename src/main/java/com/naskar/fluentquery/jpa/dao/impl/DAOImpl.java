@@ -2,14 +2,18 @@ package com.naskar.fluentquery.jpa.dao.impl;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -85,7 +89,12 @@ public class DAOImpl implements DAO {
 	private void addParams(PreparedStatement st, List<Object> params) throws SQLException {
 		if(params != null) {
 			for(int i = 0; i < params.size(); i++) {
-				st.setObject(i + 1, params.get(i));
+				Object o = params.get(i);
+				if(o instanceof Date) {
+					st.setDate(i + 1, new java.sql.Date(((java.util.Date)o).getTime()));
+				} else {
+					st.setObject(i + 1, o);
+				}
 			}
 		}
 	}
@@ -185,7 +194,8 @@ public class DAOImpl implements DAO {
 		}
 	}
 	
-	private void nativeSQL(String sql, List<Object> params, RowHandler handler) { 
+	@Override
+	public void nativeSQL(String sql, List<Object> params, RowHandler handler) { 
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		try {
@@ -236,6 +246,187 @@ public class DAOImpl implements DAO {
 	public <T> T single(Query<T> query) {
 		NativeSQLResult result = query.to(nativeSQL);
 		return single(query.getClazz(), result.sqlValues(), result.values());
+	}
+	
+	@Override
+	public void insert(String table, 
+			Map<String, Object> params, 
+			BiConsumer<String, List<Object>> call) {
+		
+		List<String> columns = new ArrayList<String>();
+		List<Object> values = new ArrayList<Object>();
+		List<String> p = new ArrayList<String>();
+		
+		params.forEach((k, v) -> {
+			columns.add(k);
+			values.add(v);
+			p.add("?");
+		});
+		
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("insert into ");
+		sb.append(table);
+		sb.append(columns.stream()
+			     .map(i -> i.toString())
+			     .collect(Collectors.joining(", ", " (", ")")));
+		sb.append(p.stream()
+			     .map(i -> i.toString())
+			     .collect(Collectors.joining(", ", " values (", ")")));
+		
+		call.accept(sb.toString(), values);
+	}
+	
+	@Override
+	public void update(String table,
+			Map<String, Object> params, 
+			Map<String, Object> where,
+			BiConsumer<String, List<Object>> call) {
+		
+		List<String> columns = new ArrayList<String>();
+		List<String> columnsWhere = new ArrayList<String>();
+		List<Object> values = new ArrayList<Object>();
+		
+		params.forEach((k, v) -> {
+			columns.add(k + " = ? ");
+			values.add(v);
+		});
+		
+		where.forEach((k, v) -> {
+			columnsWhere.add(k + " = ? ");
+			values.add(v);
+		});
+		
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("update ");
+		sb.append(table);
+		sb.append(columns.stream()
+			     .map(i -> i.toString())
+			     .collect(Collectors.joining(", ", " set ", " ")));
+		sb.append(columnsWhere.stream()
+			     .map(i -> i.toString())
+			     .collect(Collectors.joining(" and ", "where ", "")));
+		
+		call.accept(sb.toString(), values);
+	}
+	
+	@Override
+	public void delete(String table, 
+			Map<String, Object> where,
+			BiConsumer<String, List<Object>> call) {
+		
+		List<String> columnsWhere = new ArrayList<String>();
+		List<Object> values = new ArrayList<Object>();
+		
+		where.forEach((k, v) -> {
+			columnsWhere.add(k + " = ? ");
+			values.add(v);
+		});
+		
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("delete from ");
+		sb.append(table);
+		sb.append(columnsWhere.stream()
+			     .map(i -> i.toString())
+			     .collect(Collectors.joining(" and ", " where ", " ")));
+		
+		call.accept(sb.toString(), values);
+	}
+	
+	@Override
+	public void nativeExecute(String sql, List<Object> params) { 
+		PreparedStatement st = null;
+		try {
+			st = em.unwrap(Connection.class).prepareStatement(sql);
+			
+			addParams(st, params);
+			
+			st.executeUpdate();
+			
+		} catch(Exception e) {
+			throw new RuntimeException(e);
+			
+		} finally {
+			
+			if(st != null) {
+				try {
+					st.close();
+				} catch(Exception e) {
+					// TODO: logger
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	@Override
+	public List<String> getColumnsFromTable(String tableName) {
+		List<String> names = new ArrayList<String>();
+		
+		Connection conn = null;
+		ResultSet rs = null;
+		try {
+			conn = em.unwrap(Connection.class);
+			
+			DatabaseMetaData meta = conn.getMetaData();
+			rs = meta.getColumns(null, null, tableName.toLowerCase(), null);
+			
+			while (rs.next()) {
+				names.add(rs.getString("COLUMN_NAME").toLowerCase());
+			}
+			
+		} catch(Exception e) {
+			throw new RuntimeException(e);
+			
+		} finally {
+			
+			try {
+				if(rs != null) {
+					rs.close();
+				}
+			} catch(Exception e) {
+				// TODO: logger
+				e.printStackTrace();
+			}
+		}
+			
+		return names;
+	}
+	
+	@Override
+	public List<String> getPrimaryKeyFromTable(String tableName) {
+		List<String> names = new ArrayList<String>();
+		
+		Connection conn = null;
+		ResultSet rs = null;
+		try {
+			conn = em.unwrap(Connection.class);
+			
+			DatabaseMetaData meta = conn.getMetaData();
+			rs = meta.getPrimaryKeys(null, null, tableName.toLowerCase());
+			
+			while (rs.next()) {
+				names.add(rs.getString("COLUMN_NAME").toLowerCase());
+			}
+			
+		} catch(Exception e) {
+			throw new RuntimeException(e);
+			
+		} finally {
+			
+			try {
+				if(rs != null) {
+					rs.close();
+				}
+			} catch(Exception e) {
+				// TODO: logger
+				e.printStackTrace();
+			}
+		}
+			
+		return names;
 	}
 
 }
