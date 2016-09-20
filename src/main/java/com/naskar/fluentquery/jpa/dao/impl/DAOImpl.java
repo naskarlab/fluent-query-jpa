@@ -18,6 +18,9 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
+import org.eclipse.persistence.config.QueryHints;
+import org.eclipse.persistence.config.ResultType;
+
 import com.naskar.fluentquery.Query;
 import com.naskar.fluentquery.QueryBuilder;
 import com.naskar.fluentquery.converters.NativeSQL;
@@ -58,6 +61,34 @@ public class DAOImpl implements DAO {
 		em.remove(em.merge(o));
 		em.flush();
 		return o;
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Map<String, Object>> list(String sql, List<Object> params, Long first, Long max) {
+		javax.persistence.Query q = em.createNativeQuery(sql);
+		q.setHint(QueryHints.RESULT_TYPE, ResultType.Map);
+		
+		addParams(q, params);
+		
+		Long count = -1L;
+		
+		if(first != null) {
+			q.setFirstResult(first.intValue());
+			count = getCount(sql, params);
+		}
+		
+		if(max != null) {
+			q.setMaxResults(max.intValue());
+		}
+		
+		List<Map<String, Object>> result = q.getResultList(); 
+		
+		if(first != null) {
+			result = new SubListImpl<Map<String, Object>>(result, first, max, count);
+		}
+		
+		return result;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -115,7 +146,7 @@ public class DAOImpl implements DAO {
 			sqlCount = sqlCount.substring(0, pos);
 		}
 		
-		javax.persistence.Query q = em.createNativeQuery("SELECT COUNT(*) FROM (" + sqlCount + ")");
+		javax.persistence.Query q = em.createNativeQuery("SELECT COUNT(*) FROM (" + sqlCount + ") _v");
 		addParams(q, params);
 		
 		return ((Number)q.getSingleResult()).longValue();

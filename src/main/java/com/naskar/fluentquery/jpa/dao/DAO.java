@@ -17,6 +17,8 @@ public interface DAO {
 	<T> List<T> list(Query<T> query);
 	
 	<T> List<T> list(Query<T> query, Long first, Long max);
+	
+	List<Map<String, Object>> list(String sql, List<Object> params, Long first, Long max);
 
 	<T> Query<T> query(Class<T> clazz);
 	
