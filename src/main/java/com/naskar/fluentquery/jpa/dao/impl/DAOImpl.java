@@ -82,13 +82,24 @@ public class DAOImpl implements DAO {
 			q.setMaxResults(max.intValue());
 		}
 		
-		List<Map<String, Object>> result = q.getResultList(); 
+		
+		List<Map<String, Object>> dbResult = q.getResultList();
+
+		
+		final List<Map<String, Object>> result = new ArrayList<Map<String, Object>>(dbResult.size());
+		dbResult.forEach(i -> {
+			Map<String, Object> m = new HashMap<String, Object>();
+			i.forEach((Object k, Object v) -> {
+				m.put(k.toString(), v);
+			});
+			result.add(m);
+		});
 		
 		if(first != null) {
-			result = new SubListImpl<Map<String, Object>>(result, first, max, count);
+			return new SubListImpl<Map<String, Object>>(result, first, max, count);
+		} else {
+			return result;
 		}
-		
-		return result;
 	}
 	
 	@SuppressWarnings("unchecked")
