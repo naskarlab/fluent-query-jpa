@@ -42,6 +42,10 @@ public class DAOImpl implements DAO {
 		this.em = em;
 	}
 	
+	public NativeSQL getNativeSQL() {
+		return nativeSQL;
+	}
+	
 	@Override
 	public <T> T insert(T o) {
 		em.persist(o);
