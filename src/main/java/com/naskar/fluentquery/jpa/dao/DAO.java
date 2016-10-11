@@ -27,8 +27,8 @@ public interface DAO {
 	<T, R> List<R> list(Query<T> query, Class<R> clazzR);
 	
 	void nativeSQL(String sql, List<Object> params, RowHandler handler);
-
-	void nativeExecute(String sql, List<Object> params);
+	
+	void nativeExecute(String sql, List<Object> params, RowHandler handlerKeys);
 	
 	void insert(String table, 
 			Map<String, Object> params, 

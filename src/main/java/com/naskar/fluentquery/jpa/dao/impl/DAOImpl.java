@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -251,18 +252,7 @@ public class DAOImpl implements DAO {
 			
 			rs = st.executeQuery();
 			
-			ResultSetMetaData md = rs.getMetaData();
-			while(rs.next()) {
-				Map<String, Object> row = new HashMap<String, Object>();
-				
-				for(int j = 1; j <= md.getColumnCount(); j++) {
-					row.put(md.getColumnName(j), rs.getObject(j));
-				}
-				
-				if(!handler.execute(row)) {
-					break;
-				}
-			}
+			forEachHandler(rs, handler);
 			
 		} catch(Exception e) {
 			throw new RuntimeException(e);
@@ -284,6 +274,21 @@ public class DAOImpl implements DAO {
 					// TODO: logger
 					e.printStackTrace();
 				}
+			}
+		}
+	}
+
+	private void forEachHandler(ResultSet rs, RowHandler handler) throws SQLException {
+		ResultSetMetaData md = rs.getMetaData();
+		while(rs.next()) {
+			Map<String, Object> row = new HashMap<String, Object>();
+			
+			for(int j = 1; j <= md.getColumnCount(); j++) {
+				row.put(md.getColumnName(j), rs.getObject(j));
+			}
+			
+			if(!handler.execute(row)) {
+				break;
 			}
 		}
 	}
@@ -382,19 +387,40 @@ public class DAOImpl implements DAO {
 	}
 	
 	@Override
-	public void nativeExecute(String sql, List<Object> params) { 
+	public void nativeExecute(String sql, List<Object> params, RowHandler handlerKeys) { 
 		PreparedStatement st = null;
+		ResultSet rs = null;
 		try {
-			st = em.unwrap(Connection.class).prepareStatement(sql);
+			st = em.unwrap(Connection.class)
+					.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 			
 			addParams(st, params);
 			
+			// TODO: logger
+			System.out.println("SQL:" + sql);
+			
 			st.executeUpdate();
+
+			if(handlerKeys != null) {
+				rs = st.getGeneratedKeys();
+				if(rs != null) {
+					forEachHandler(rs, handlerKeys);
+				}
+			}
 			
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 			
 		} finally {
+			
+			if(rs != null) {
+				try {
+					rs.close();
+				} catch(Exception e) {
+					// TODO: logger
+					e.printStackTrace();
+				}
+			}
 			
 			if(st != null) {
 				try {
