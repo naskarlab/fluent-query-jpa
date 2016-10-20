@@ -138,7 +138,7 @@ public class DAOImpl implements DAO {
 			for(int i = 0; i < params.size(); i++) {
 				Object o = params.get(i);
 				if(o instanceof Date) {
-					st.setDate(i + 1, new java.sql.Date(((java.util.Date)o).getTime()));
+					st.setTimestamp(i + 1, new java.sql.Timestamp(((java.util.Date)o).getTime()));
 				} else {
 					st.setObject(i + 1, o);
 				}
@@ -397,7 +397,7 @@ public class DAOImpl implements DAO {
 			addParams(st, params);
 			
 			// TODO: logger
-			System.out.println("SQL:" + sql);
+			System.out.println("SQL:" + sql + " params: " + params);
 			
 			st.executeUpdate();
 
