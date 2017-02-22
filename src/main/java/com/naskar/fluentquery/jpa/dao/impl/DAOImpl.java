@@ -1,5 +1,7 @@
 package com.naskar.fluentquery.jpa.dao.impl;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -139,6 +141,12 @@ public class DAOImpl implements DAO {
 				Object o = params.get(i);
 				if(o instanceof Date) {
 					st.setTimestamp(i + 1, new java.sql.Timestamp(((java.util.Date)o).getTime()));
+				} else if(o instanceof File) {
+					try {
+						st.setBinaryStream(i + 1, new FileInputStream((File)o));
+					} catch(Exception e) {
+						throw new RuntimeException(e);
+					}				
 				} else {
 					st.setObject(i + 1, o);
 				}
