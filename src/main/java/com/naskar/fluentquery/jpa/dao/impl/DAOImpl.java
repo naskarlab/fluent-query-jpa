@@ -405,7 +405,7 @@ public class DAOImpl implements DAO {
 			addParams(st, params);
 			
 			// TODO: logger
-			System.out.println("SQL:" + sql + " params: " + params);
+			// System.out.println("SQL:" + sql + " params: " + params);
 			
 			st.executeUpdate();
 
