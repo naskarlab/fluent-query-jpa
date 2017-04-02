@@ -2,6 +2,7 @@ package com.naskar.fluentquery.jpa.dao.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -10,7 +11,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +39,10 @@ public class DAOImpl implements DAO {
 	private EntityManager em;
 	
 	private NativeSQL nativeSQL;
+	
+	private static final List<Integer> BINARY_TYPES = Arrays.asList(
+		Types.BINARY, Types.LONGVARBINARY, Types.VARBINARY
+	);
 	
 	public DAOImpl() {
 		this.nativeSQL = new NativeSQL();
@@ -144,6 +151,12 @@ public class DAOImpl implements DAO {
 				} else if(o instanceof File) {
 					try {
 						st.setBinaryStream(i + 1, new FileInputStream((File)o));
+					} catch(Exception e) {
+						throw new RuntimeException(e);
+					}
+				} else if(o instanceof InputStream) {
+					try {
+						st.setBinaryStream(i + 1, (InputStream)o);
 					} catch(Exception e) {
 						throw new RuntimeException(e);
 					}				
@@ -292,7 +305,11 @@ public class DAOImpl implements DAO {
 			Map<String, Object> row = new HashMap<String, Object>();
 			
 			for(int j = 1; j <= md.getColumnCount(); j++) {
-				row.put(md.getColumnName(j), rs.getObject(j));
+				if(BINARY_TYPES.contains(md.getColumnType(j))) {
+					row.put(md.getColumnName(j), rs.getBinaryStream(j));
+				} else {
+					row.put(md.getColumnName(j), rs.getObject(j));
+				}
 			}
 			
 			if(!handler.execute(row)) {
