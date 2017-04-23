@@ -434,6 +434,10 @@ public class DAOImpl implements DAO {
 			}
 			
 		} catch(Exception e) {
+			
+			// TODO: logger
+			System.out.println("SQL:" + sql + " params: " + params);
+			
 			throw new RuntimeException(e);
 			
 		} finally {
