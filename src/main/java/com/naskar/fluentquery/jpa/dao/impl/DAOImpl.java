@@ -52,6 +52,10 @@ public class DAOImpl implements DAO {
 		this.em = em;
 	}
 	
+	protected EntityManager getEm() {
+		return em;
+	}
+	
 	public NativeSQL getNativeSQL() {
 		return nativeSQL;
 	}
@@ -276,6 +280,9 @@ public class DAOImpl implements DAO {
 			forEachHandler(rs, handler);
 			
 		} catch(Exception e) {
+			// TODO: logger
+			System.out.println("SQL:" + sql + "\nParams:" + params);
+			e.printStackTrace();
 			throw new RuntimeException(e);
 			
 		} finally {
