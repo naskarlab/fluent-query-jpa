@@ -43,11 +43,4 @@
 		</dependency>
 	</dependencies>
 	
-	<distributionManagement>
-		<repository>
-	  		<id>maven-repository</id>
-	  		<url>${mvnrepo.path}</url>
-	  	</repository>
-	</distributionManagement>
-	
 </project>
