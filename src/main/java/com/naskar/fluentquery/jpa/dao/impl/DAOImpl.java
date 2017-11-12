@@ -38,6 +38,7 @@ public class DAOImpl implements DAO {
 
 	private EntityManager em;
 	
+	private QueryBuilder queryBuilder;
 	private NativeSQL nativeSQL;
 	
 	private static final List<Integer> BINARY_TYPES = Arrays.asList(
@@ -46,6 +47,7 @@ public class DAOImpl implements DAO {
 	
 	public DAOImpl() {
 		this.nativeSQL = new NativeSQL();
+		this.queryBuilder = new QueryBuilder();
 	}
 	
 	public void setEm(EntityManager em) {
@@ -251,7 +253,7 @@ public class DAOImpl implements DAO {
 		
 	@Override
 	public <T> Query<T> query(Class<T> clazz) {
-		return new QueryBuilder().from(clazz);
+		return queryBuilder.from(clazz);
 	}
 	
 	@SuppressWarnings("unchecked")
