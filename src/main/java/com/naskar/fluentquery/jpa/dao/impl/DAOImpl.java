@@ -27,10 +27,21 @@ import javax.persistence.NoResultException;
 import org.eclipse.persistence.config.QueryHints;
 import org.eclipse.persistence.config.ResultType;
 
+import com.naskar.fluentquery.Delete;
+import com.naskar.fluentquery.DeleteBuilder;
+import com.naskar.fluentquery.InsertBuilder;
+import com.naskar.fluentquery.Into;
 import com.naskar.fluentquery.Query;
 import com.naskar.fluentquery.QueryBuilder;
+import com.naskar.fluentquery.Update;
+import com.naskar.fluentquery.UpdateBuilder;
+import com.naskar.fluentquery.binder.BinderSQL;
+import com.naskar.fluentquery.binder.BinderSQLBuilder;
 import com.naskar.fluentquery.converters.NativeSQL;
+import com.naskar.fluentquery.converters.NativeSQLDelete;
+import com.naskar.fluentquery.converters.NativeSQLInsertInto;
 import com.naskar.fluentquery.converters.NativeSQLResult;
+import com.naskar.fluentquery.converters.NativeSQLUpdate;
 import com.naskar.fluentquery.jpa.dao.DAO;
 import com.naskar.fluentquery.jpa.dao.RowHandler;
 
@@ -38,8 +49,19 @@ public class DAOImpl implements DAO {
 
 	private EntityManager em;
 	
-	private QueryBuilder queryBuilder;
 	private NativeSQL nativeSQL;
+	private QueryBuilder queryBuilder;
+	
+	private NativeSQLInsertInto insertSQL;
+	private InsertBuilder insertBuilder;
+	
+	private NativeSQLUpdate updateSQL;
+	private UpdateBuilder updateBuilder;
+	
+	private NativeSQLDelete deleteSQL;
+	private DeleteBuilder deleteBuilder;
+	
+	private BinderSQLBuilder binderBuilder;
 	
 	private static final List<Integer> BINARY_TYPES = Arrays.asList(
 		Types.BINARY, Types.LONGVARBINARY, Types.VARBINARY
@@ -48,6 +70,17 @@ public class DAOImpl implements DAO {
 	public DAOImpl() {
 		this.nativeSQL = new NativeSQL();
 		this.queryBuilder = new QueryBuilder();
+		
+		this.insertSQL = new NativeSQLInsertInto();
+		this.insertBuilder = new InsertBuilder();
+		
+		this.updateSQL = new NativeSQLUpdate();
+		this.updateBuilder = new UpdateBuilder();
+		
+		this.deleteSQL = new NativeSQLDelete();
+		this.deleteBuilder = new DeleteBuilder();
+		
+		this.binderBuilder = new BinderSQLBuilder();
 	}
 	
 	public void setEm(EntityManager em) {
@@ -81,6 +114,55 @@ public class DAOImpl implements DAO {
 		em.remove(em.merge(o));
 		em.flush();
 		return o;
+	}
+	
+	@Override
+	public <T> Into<T> insert(Class<T> clazz) {
+		return insertBuilder.into(clazz);
+	}
+	
+	@Override
+	public <T> Update<T> update(Class<T> clazz) {
+		return updateBuilder.entity(clazz);
+	}
+	
+	@Override
+	public <T> Delete<T> delete(Class<T> clazz) {
+		return deleteBuilder.entity(clazz);
+	}
+	
+	@Override
+	public <T> void execute(Into<T> into) {
+		NativeSQLResult result = into.to(insertSQL);
+		nativeExecute(result.sqlValues(), result.values(), null);
+	}
+	
+	@Override
+	public <T> void execute(Update<T> update) {
+		NativeSQLResult result = update.to(updateSQL);
+		nativeExecute(result.sqlValues(), result.values(), null);
+	}
+	
+	@Override
+	public <T> void execute(Delete<T> delete) {
+		NativeSQLResult result = delete.to(deleteSQL);
+		nativeExecute(result.sqlValues(), result.values(), null);
+	}
+	
+	@Override
+	public <R> void execute(BinderSQL<R> binder, R r) {
+		NativeSQLResult result = binder.bind(r);
+		nativeExecute(result.sqlValues(), result.values(), null);
+	}
+	
+	@Override
+	public <R> BinderSQL<R> binder(Class<R> clazz) {	
+		return binderBuilder.from(clazz);
+	}
+	
+	@Override
+	public <R, T> void configure(BinderSQL<R> binder, Into<T> into) {
+		binder.configure(into.to(insertSQL));
 	}
 	
 	@SuppressWarnings("unchecked")
