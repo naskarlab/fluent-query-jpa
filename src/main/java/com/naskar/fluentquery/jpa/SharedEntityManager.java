@@ -18,6 +18,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.metamodel.Metamodel;
 
+@SuppressWarnings("rawtypes")
 public class SharedEntityManager implements EntityManager {
 	
 	private ThreadLocal<EntityManager> scope;
