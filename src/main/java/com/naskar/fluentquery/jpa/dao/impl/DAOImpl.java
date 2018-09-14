@@ -192,7 +192,7 @@ public class DAOImpl implements DAO {
 		dbResult.forEach(i -> {
 			Map<String, Object> m = new HashMap<String, Object>();
 			i.forEach((Object k, Object v) -> {
-				m.put(k.toString(), v);
+				m.put(k.toString().toLowerCase(), v);
 			});
 			result.add(m);
 		});
@@ -292,7 +292,7 @@ public class DAOImpl implements DAO {
 		Map<String, Field> m = new HashMap<String, Field>();
 		
 		for(Field f : clazz.getDeclaredFields()) {
-			m.put(f.getName().toUpperCase(), f);
+			m.put(f.getName().toLowerCase(), f);
 		}
 		
 		return m;
