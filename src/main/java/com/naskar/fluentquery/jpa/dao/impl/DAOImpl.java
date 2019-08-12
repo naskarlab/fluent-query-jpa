@@ -42,6 +42,7 @@ import com.naskar.fluentquery.converters.NativeSQLDelete;
 import com.naskar.fluentquery.converters.NativeSQLInsertInto;
 import com.naskar.fluentquery.converters.NativeSQLResult;
 import com.naskar.fluentquery.converters.NativeSQLUpdate;
+import com.naskar.fluentquery.impl.Convention;
 import com.naskar.fluentquery.jpa.dao.DAO;
 import com.naskar.fluentquery.jpa.dao.RowHandler;
 
@@ -91,8 +92,11 @@ public class DAOImpl implements DAO {
 		return em;
 	}
 	
-	public NativeSQL getNativeSQL() {
-		return nativeSQL;
+	public void setConvention(Convention convention) {
+		this.nativeSQL.setConvention(convention);
+		this.insertSQL.setConvention(convention);
+		this.updateSQL.setConvention(convention);
+		this.deleteSQL.setConvention(convention);
 	}
 	
 	@Override
