@@ -270,10 +270,13 @@ public class DAOImpl implements DAO {
 	private Long getCount(String sql, List<Object> params) {
 		String sqlCount = sql;
 		
+		/*
+		TODO: verificar se ainda é necessario
 		int pos = sqlCount.indexOf("order by");
 		if(pos > -1) {
 			sqlCount = sqlCount.substring(0, pos);
 		}
+		*/
 		
 		javax.persistence.Query q = em.createNativeQuery("SELECT COUNT(*) FROM (" + sqlCount + ") _v");
 		addParams(q, params);
