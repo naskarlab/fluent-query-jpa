@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -570,7 +571,8 @@ public class DAOImpl implements DAO {
 			conn = em.unwrap(Connection.class);
 			
 			DatabaseMetaData meta = conn.getMetaData();
-			rs = meta.getColumns(null, null, tableName.toLowerCase(), null);
+			String[] tableAttrs = getTableAttrs(tableName.toLowerCase());
+			rs = meta.getColumns(null, tableAttrs[0], tableAttrs[1], null);
 			
 			while (rs.next()) {
 				names.add(rs.getString("COLUMN_NAME").toLowerCase());
@@ -604,7 +606,8 @@ public class DAOImpl implements DAO {
 			conn = em.unwrap(Connection.class);
 			
 			DatabaseMetaData meta = conn.getMetaData();
-			rs = meta.getPrimaryKeys(null, null, tableName.toLowerCase());
+			String[] tableAttrs = getTableAttrs(tableName.toLowerCase());
+			rs = meta.getPrimaryKeys(null, tableAttrs[0], tableAttrs[1]);
 			
 			while (rs.next()) {
 				names.add(rs.getString("COLUMN_NAME").toLowerCase());
@@ -626,6 +629,21 @@ public class DAOImpl implements DAO {
 		}
 			
 		return names;
+	}
+
+	private String[] getTableAttrs(String tableName) {
+		String catalog = null;
+		String table = tableName;
+		
+		if(tableName.contains(".")) {
+			String[] parts = tableName.split(Pattern.quote("."));
+			if(parts.length == 2) {
+				catalog = parts[0];
+				table = parts[1];
+			}
+		}
+		
+		return new String[] { catalog, table };
 	}
 
 }
