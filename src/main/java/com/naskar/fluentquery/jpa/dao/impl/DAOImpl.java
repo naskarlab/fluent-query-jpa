@@ -319,12 +319,11 @@ public class DAOImpl implements DAO {
 			
 				for(Map.Entry<String, Object> e : row.entrySet()) {
 					
-					Field f = m.get(e.getKey().toUpperCase());
+					Field f = m.get(e.getKey().toLowerCase());
 					
 					if(f != null) {
 						f.setAccessible(true);
 						f.set(r, e.getValue());
-						f.setAccessible(false);
 					}
 					
 				}
