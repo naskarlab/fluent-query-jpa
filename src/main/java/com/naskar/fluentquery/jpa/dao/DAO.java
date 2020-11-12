@@ -30,6 +30,8 @@ public interface DAO {
 
 	<T, R> List<R> list(Query<T> query, Class<R> clazzR);
 	
+	<T> javax.persistence.Query nativeQuery(Query<T> query);
+	
 	void nativeSQL(String sql, List<Object> params, RowHandler handler);
 	
 	void nativeExecute(String sql, List<Object> params, RowHandler handlerKeys);

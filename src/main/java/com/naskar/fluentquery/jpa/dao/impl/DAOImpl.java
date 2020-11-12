@@ -170,6 +170,15 @@ public class DAOImpl implements DAO {
 		binder.configure(into.to(insertSQL));
 	}
 	
+	public <T> javax.persistence.Query nativeQuery(Query<T> query) {
+		NativeSQLResult result = query.to(nativeSQL);
+		
+		javax.persistence.Query q = em.createNativeQuery(result.sqlValues());
+		addParams(q, result.values());
+		
+		return q;
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<Map<String, Object>> list(String sql, List<Object> params, Long first, Long max) {
