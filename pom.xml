@@ -26,7 +26,7 @@
 		</dependency>
 		
 		<dependency>
-			<groupId>com.naskar</groupId>
+			<groupId>com.github.naskarlab</groupId>
 			<artifactId>fluent-query</artifactId>
 			<version>0.3.1</version>
 		</dependency>
@@ -62,18 +62,9 @@
 	
 	<repositories>
 	   <repository>
-		 <id>github</id>
-		 <name>GitHub OWNER Apache Maven Packages</name>
-		 <url>https://maven.pkg.github.com/naskarlab/fluent-query</url>
+		<id>jitpack.io</id>
+		<url>https://jitpack.io</url>
 	   </repository>
 	</repositories>
-	
-	<distributionManagement>
-	   <repository>
-		 <id>github</id>
-		 <name>GitHub OWNER Apache Maven Packages</name>
-		 <url>https://maven.pkg.github.com/naskarlab/fluent-query</url>
-	   </repository>
-	</distributionManagement>
 	
 </project>
